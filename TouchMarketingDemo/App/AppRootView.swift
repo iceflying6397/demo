@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AppRootView: View {
     @State private var selectedTab: AppTab = .audience
+    @State private var session = DemoSession(seed: .demo)
     private let store = MockDataStore.demo
 
     var body: some View {
@@ -15,6 +16,7 @@ struct AppRootView: View {
             }
         }
         .tint(DemoTheme.ColorToken.primaryText)
+        .environment(session)
     }
 
     @ViewBuilder

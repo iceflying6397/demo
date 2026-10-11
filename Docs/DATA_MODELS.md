@@ -10,7 +10,7 @@
 | `AudienceScore` | `dimension`、`value: Int?`；五维枚举，1...5，nil 为依据不足；`displayValue` |
 | `CategoryPreference` | `id`、`name`、`percentage`（0...100）；当前按购买件数展示固定示例 |
 | `MarketingPlan` | `id`、`number`、`purpose`、`customerStage`、`version`、`message`、`resourceSummary`、`source`、`audienceIDs`；`displayName` 如方案 01 |
-| `ApprovalTask` | `id`、`number`、`audienceID`、`audienceVersion`、`expectedReach`、`allocation`、`approvalStatus`、`deliveryStatus: DeliveryStatus?` |
+| `ApprovalTask` | 稳定 `id`／`number`；可变的人群、版本、`expectedReach`、`reachState`、`allocation`、审批和执行状态；来源、推荐比例、规则 ID 和周期键在创建后不变 |
 | `ABAllocation` | `groups` 包含一或两个 `Group`；每组 `planID`、`planVersion`、`percentage`；组 ID 是方案 ID |
 | `AnalyticsSummary` | `id`、`startDate`、`endDate`、`audienceID`、`deliveryTaskID`、`performances`、`totals` |
 | `PlanPerformance` | `planID`、`planVersion`、`metrics`；当前每个摘要同一方案只一条，不支持重复版本混合条目 |
@@ -60,10 +60,27 @@
 
 转化率 = 成交人数 ÷ 触达人数，分母 0 时返回 nil，显示“—”。合计存储在 `totals`，不可对两个百分率取平均。当前互斥同组示例可相加，未来跨任务合计需要去重；本 App 不持有客户名单，不能声称已经执行去重。
 
-## 仅文档约定，尚未写入 Swift
+## 审批扩展（开发者 C 已写入 Swift）
 
-`VersionRecord`：后续最小字段建议为稳定 `id`、`objectKind`（audience／plan）、`objectID`、`version`、`createdAt`、`changeSource`（manualEdit／aiAdoption）、`summary`。真正实现历史详情时，再定义人群规则／方案内容的类型化快照，不提前加入任意 JSON 或空协议。
+共享会话是 `DemoSession`，由 App 根创建一次。审批页读写这份会话；人群、方案、数据页仍读取原来的只读 `MockDataStore`，直到整合者把它们接进来。`MockDataStore.demo` 仍是重置时的种子。
 
-本阶段所有人群和方案只有当前 `version`，没有 VersionRecord 数组或历史 UI。暂不实现观察周期、规则条件、自定义字段、量表版本、更新日期、建议处理记录、资源对象、触达规则、处理记录、失败客户范围、执行快照、统计完成状态和趋势点。
+| 类型 | 说明 |
+| --- | --- |
+| `ApprovalTaskOrigin` | `aiRecommendation`、`birthdayRule`、`revisitRule`、`manualTest` |
+| `TaskReachState` | `known`、`pendingReview`（待核对）、`zeroCoverage`、`unavailable`。待核对不是 0 |
+| `DeliverySnapshot` | 确认时冻结的人群、评分、方案正文、资源摘要、比例和分配人数 |
+| `DeliveryBatch` | 一次执行。重试更新同一批次的成功／失败人数，不新建批次 |
+| `ApprovalRecord` | 稳定 ID、序号、任务、操作类型、实际时间、前后摘要、说明、演示运营人员 |
+| `RulePendingTaskRequest` | B 传入规则 ID、周期键、来源、人群版本、预计人数和分配。同一规则＋周期不重复 |
+| `DeliveryTouchSummary` | 给 D 的只读触达投影：批次、任务、业务日、版本、分配和成功人数、统计状态。不含成交 |
+| `StatisticsReadiness` | 新批次为 `collecting`（统计中）。只有历史 `batch-history-01` 是 `historicalSample` |
 
-后续规则：发送快照需冻结人群／方案版本和分配；数据需补 `audienceVersion`、批次及归因范围；统计中的未知值须显式表示，不作为 0。多个方案版本合并统计时，应调整 PlanPerformance 的唯一 ID 与分组约定。扩展共享模型必须同时更新本文件、fixture 和相关页面。
+人数规则仍用 `ABAllocation.expectedCounts`。部分失败的演示样本把失败人数定为分配人数的 1/4，因此 600／1,400 得到失败 150／350。重试全部成功后唯一成功触达仍是原分配人数。业务日固定为上海时区 2026/10/11；操作记录另记实际时间。
+
+审批选择器里还有三个人群演示样本，只放在会话中，不改人群页的两张卡片：`audience-03` 零覆盖，`audience-04` 依据不足但本次 400 人，`audience-05` 小样本 50 人。`audience-01` 本次范围是 2,000，不是覆盖数 8,420；`audience-02` 本次范围是 900。
+
+## 仍未写入 Swift 的通用约定
+
+`VersionRecord` 仍未作为通用类型加入。审批用 `DeliverySnapshot` 和会话里的版本档案保存发送当时的人群／方案内容，不替代 A／B 的通用历史版本模型。
+
+尚未实现观察周期、规则条件、自定义字段、量表版本、店铺资源本体、触达规则配置、客户级失败名单、真实去重和趋势点。成交未知保持“统计中”，不写成 0。多个方案版本合并统计时，仍应调整 `PlanPerformance` 的唯一 ID 与分组约定。
