@@ -13,6 +13,14 @@ struct MarketingPlan: Identifiable, Hashable {
     let audienceIDs: [String]
 
     var displayName: String { DemoFormat.numbered("方案", number) }
+
+    func replacing(version: Int? = nil, message: String? = nil) -> MarketingPlan {
+        MarketingPlan(
+            id: id, number: number, purpose: purpose, customerStage: customerStage,
+            version: version ?? self.version, message: message ?? self.message,
+            resourceSummary: resourceSummary, source: source, audienceIDs: audienceIDs
+        )
+    }
 }
 
 enum PlanPurpose: String, CaseIterable {

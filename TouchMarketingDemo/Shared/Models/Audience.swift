@@ -10,6 +10,17 @@ struct Audience: Identifiable, Hashable {
     let categoryPreferences: [CategoryPreference]
 
     var displayName: String { DemoFormat.numbered("人群", number) }
+
+    func replacing(version: Int? = nil, scores: [AudienceScore]? = nil) -> Audience {
+        Audience(
+            id: id, number: number, memberCount: memberCount, source: source,
+            version: version ?? self.version,
+            scores: scores ?? self.scores,
+            categoryPreferences: categoryPreferences
+        )
+    }
+
+    var hasInsufficientEvidence: Bool { scores.contains { $0.value == nil } }
 }
 
 enum CreationSource: String, CaseIterable {

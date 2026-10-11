@@ -5,6 +5,7 @@ mkdir -p .build/AnalyticsValidation
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 xcrun swiftc -module-cache-path .build/AnalyticsValidation/ModuleCache \
   TouchMarketingDemo/Shared/Models/*.swift \
+  TouchMarketingDemo/Shared/State/ApprovalAllocationRules.swift \
   TouchMarketingDemo/Shared/Utilities/DemoFormat.swift \
   TouchMarketingDemo/Shared/MockData/MockDataStore.swift \
   TouchMarketingDemo/Shared/Analytics/*.swift \

@@ -23,6 +23,10 @@ struct AppRootView: View {
             }
         }
         .environment(session)
+        .environment(\.planSession, session)
+        .environment(\.analyticsIntegration, AnalyticsIntegration(
+            statistics: session.analyticsStatistics, resetGeneration: session.resetGeneration,
+            loadStatistics: { session.loadAnalyticsStatistics(batchID: $0) }))
         .id(session.resetGeneration)
         .tint(DemoTheme.ColorToken.primaryText)
         .confirmationDialog("重置所有演示数据？", isPresented: $confirmReset, titleVisibility: .visible) {
@@ -36,14 +40,7 @@ struct AppRootView: View {
         switch tab {
         case .audience: AudienceHomeView(store: session.store, session: session)
         case .plan: PlanHomeView(store: session.store)
-        case .approval:
-            VStack(spacing: 0) {
-                if session.approvalTasks.contains(where: { session.audience(id: $0.audienceID)?.audience.version != $0.audienceVersion }) {
-                    Text("人群版本已更新；现有任务仍保留原版本，请核对后再处理。")
-                        .font(DemoTheme.Typography.caption).padding().background(DemoTheme.ColorToken.cardBackground)
-                }
-                ApprovalHomeView(store: session.approvalStore)
-            }
+        case .approval: ApprovalHomeView(store: session.store)
         case .analytics: AnalyticsHomeView(store: session.store)
         }
     }

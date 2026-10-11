@@ -8,6 +8,8 @@ xcrun swiftc -parse-as-library \
   TouchMarketingDemo/Shared/Models/Audience.swift \
   TouchMarketingDemo/Shared/Models/MarketingPlan.swift \
   TouchMarketingDemo/Shared/Models/ApprovalTask.swift \
+  TouchMarketingDemo/Shared/Models/ApprovalDelivery.swift \
+  TouchMarketingDemo/Shared/State/ApprovalAllocationRules.swift \
   TouchMarketingDemo/Shared/Models/AnalyticsSummary.swift \
   TouchMarketingDemo/Shared/Models/PlanDomain.swift \
   TouchMarketingDemo/Shared/Models/PlanValidation.swift \

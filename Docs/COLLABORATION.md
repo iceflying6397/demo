@@ -92,3 +92,7 @@
 为兼容 C 当前只读页面，根传 `approvalStore`，其人群画像来自任务所引用版本；根显示最新版变化提醒。此适配针对现有单一人群版本任务样本。C 完成多任务版本选择后，应逐任务使用 `audienceVersion`／`planVersion`，不能用一个扁平 store 表达同对象多个版本。新建人群已在 `session.audiences`／`session.store` 可查；C 选择器尚未开发，故 UI 联合验收仍待 C 接线。
 
 B 的资源／规则、C 的冻结执行批次／操作重试、D 的趋势／联合去重结果仍按各自任务提出最小类型后整合；本次不替领域负责人设计未使用的模型或业务页面。共享基础独立提交在 feature/audience，交团队 review 后优先合入，不自动合并 main 或通知其他聊天。
+
+## PR #3/#4 整合后接口
+
+唯一 DemoSession 为 MainActor Observable。tasks 与 approvalTasks 为同一集合，C 使用 approvalAudience／audienceRevision／planRevision，A 保留 audience 的 AudienceSnapshot 签名。B PlanSessionAccess 写入和 C 规则待审批入口已接通；D analyticsIntegration 由根从会话观察值构造，加载闭包调用 loadAnalyticsStatistics。重置恢复所有模块，历史批次不重复计入新统计。完整说明及可复现检查见 DeveloperTasks/PR_INTEGRATION_20261011.md。

@@ -3,15 +3,75 @@ import Foundation
 struct ApprovalTask: Identifiable, Hashable {
     let id: String
     let number: Int
-    let audienceID: String
-    let audienceVersion: Int
-    let expectedReach: Int
-    let allocation: ABAllocation
-    let approvalStatus: ApprovalStatus
+    var audienceID: String
+    var audienceVersion: Int
+    var expectedReach: Int
+    var reachState: TaskReachState
+    var allocation: ABAllocation
+    var approvalStatus: ApprovalStatus
     /// 待审批任务为 nil；审批状态与执行状态不能混用。
-    let deliveryStatus: DeliveryStatus?
+    var deliveryStatus: DeliveryStatus?
+    let origin: ApprovalTaskOrigin
+    let originSummary: String
+    let isTest: Bool
+    /// 生成时的推荐比例，恢复推荐时回到这里，不随当前草稿覆盖。
+    let recommendedAllocation: ABAllocation
+    let ruleID: String?
+    let generationCycleKey: String?
+
+    init(
+        id: String,
+        number: Int,
+        audienceID: String,
+        audienceVersion: Int,
+        expectedReach: Int,
+        allocation: ABAllocation,
+        approvalStatus: ApprovalStatus,
+        deliveryStatus: DeliveryStatus?,
+        reachState: TaskReachState = .known,
+        origin: ApprovalTaskOrigin = .aiRecommendation,
+        originSummary: String = "AI 推荐",
+        isTest: Bool = true,
+        recommendedAllocation: ABAllocation? = nil,
+        ruleID: String? = nil,
+        generationCycleKey: String? = nil
+    ) {
+        self.id = id
+        self.number = number
+        self.audienceID = audienceID
+        self.audienceVersion = audienceVersion
+        self.expectedReach = expectedReach
+        self.reachState = reachState
+        self.allocation = allocation
+        self.approvalStatus = approvalStatus
+        self.deliveryStatus = deliveryStatus
+        self.origin = origin
+        self.originSummary = originSummary
+        self.isTest = isTest
+        self.recommendedAllocation = recommendedAllocation ?? allocation
+        self.ruleID = ruleID
+        self.generationCycleKey = generationCycleKey
+    }
 
     var displayName: String { DemoFormat.numbered("任务", number) }
+
+    var sourceMark: String {
+        isTest ? "\(origin.rawValue) · 测试" : origin.rawValue
+    }
+}
+
+enum TaskReachState: String, Hashable {
+    case known = "已核对"
+    case pendingReview = "待核对"
+    case zeroCoverage = "零覆盖"
+    case unavailable = "不可用"
+}
+
+enum ApprovalTaskOrigin: String, Hashable {
+    case aiRecommendation = "AI 推荐"
+    case birthdayRule = "生日规则"
+    case revisitRule = "回访规则"
+    case manualTest = "手动测试"
 }
 
 enum ApprovalStatus: String, CaseIterable {
@@ -53,5 +113,22 @@ struct ABAllocation: Hashable {
         if groups.count == 1 { return [total] }
         let first = Int((Double(total) * Double(groups[0].percentage) / 100).rounded(.down))
         return [first, total - first]
+    }
+}
+
+enum ApprovalActionResult: Equatable {
+    case saved(String)
+    case unchanged(String)
+    case failed(String)
+
+    var message: String {
+        switch self {
+        case .saved(let text), .unchanged(let text), .failed(let text): text
+        }
+    }
+
+    var isFailure: Bool {
+        if case .failed = self { return true }
+        return false
     }
 }

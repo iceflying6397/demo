@@ -2,8 +2,10 @@ import Foundation
 
 @main
 struct AudienceSessionChecks {
+    @MainActor
     static func main() throws {
         let session = DemoSession()
+        let initialTasks = session.approvalTasks
         var count = 0
         func check(_ success: @autoclosure () -> Bool, _ name: String) throws {
             guard success() else { throw DemoValidationError(message: "FAIL: \(name)") }
@@ -83,7 +85,7 @@ struct AudienceSessionChecks {
         try check(true, "date boolean OR support")
         session.reset()
         try check(session.audiences == MockDataStore.demo.audiences && session.fields == MockDataStore.audienceFields && session.resetGeneration == 1, "reset all audiences fields")
-        try check(session.approvalTasks == MockDataStore.demo.approvalTasks && session.plans == MockDataStore.demo.plans, "reset other modules")
+        try check(session.approvalTasks == initialTasks && session.plans == MockDataStore.demo.plans, "reset other modules")
         let beforeSuggestion = session.audience(id: "audience-01")
         try check(session.suggestions.first?.status == .pending && beforeSuggestion?.audience.version == 1, "view and cancel suggestion no mutation")
         try session.deferSuggestion(id: "suggestion-audience-valid")

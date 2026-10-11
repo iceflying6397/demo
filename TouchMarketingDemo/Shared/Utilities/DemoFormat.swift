@@ -22,10 +22,22 @@ enum DemoFormat {
         return formatter.string(from: date)
     }
     static func dateRange(start: Date, end: Date) -> String {
+        "\(day(start))—\(day(end))"
+    }
+
+    static func day(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = locale
-        formatter.timeZone = TimeZone(identifier: "Asia/Shanghai")
+        formatter.timeZone = TimeZone(identifier: "Asia/Shanghai") ?? .gmt
         formatter.dateFormat = "yyyy/MM/dd"
-        return "\(formatter.string(from: start))—\(formatter.string(from: end))"
+        return formatter.string(from: date)
+    }
+
+    static func dateTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.timeZone = TimeZone(identifier: "Asia/Shanghai") ?? .gmt
+        formatter.dateFormat = "yyyy/MM/dd HH:mm"
+        return formatter.string(from: date)
     }
 }
