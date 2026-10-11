@@ -70,3 +70,29 @@
 规则生成接口由C定义，B传规则配置/范围，A接入session；保存规则不自动执行。确认生成独立批次/冻结快照，重试只更新该批次失败范围。D读取唯一成功触达并默认显示成交统计中；载入明确匹配的模拟统计才显示已知成交。原task-history-01/analytics-week-01始终独立保留。
 
 只有App维护跨Tab路由；Feature可以通过ID请求跳转或给出明确Tab指引，不能互相实例化具体View。共享操作必须在数据层检查ID/版本/状态，按钮禁用不替代校验；用户输入不得用force unwrap或precondition作为错误处理。
+
+## A 已实现的共享接线（2026/10/11）
+
+`DemoSession` 现已存在，由 `AppRootView` 用 `@State` 创建一次，并通过 `.environment(session)` 注入四个 NavigationStack。A 首页另外接收同一实例；保留 `init(store:)` 的独立 Preview 回退初始化，不要求旧预览提供 environment。B/C/D 首页签名及文件保持原样，根每次从 session 投影只读 store；正式接写入时使用 `@Environment(DemoSession.self)`，不要新建会话。
+
+调用约定：
+
+- `audiences`、`plans`、`approvalTasks`、`analytics`、`fields`、`suggestions`、`versions` 只读查询；写入必须调用方法。
+- `saveAudience(id:baseVersion:rules:) throws -> AudienceSnapshot`：新建传 nil/nil；更新必须带基础版本；无变化不生成版本；新建编号在会话内递增。
+- `audience(id:)` 读当前；`audienceVersion(id:version:)`、`planVersion(id:version:)` 查类型化旧内容；缺失返回 nil，禁止回退最新。
+- `completeRecognition(id:version:scenario:)`：只完成当前识别中版本一次，不增加版本；已完成版本不会再被刷新改写。
+- `saveField(_:)`：名称和分类属性校验，字段版本并发校验；冻结旧规则定义。停用字段仅允许原有未变化条件继续保留。
+- `adoptSuggestion(id:)`：检查目标、状态和基础版本，原子保存版本及采纳记录；`deferSuggestion(id:)` 只改处理状态。
+- `savePlan(_:baseVersion:)`：B 的现有方案更新最小入口，保留编号且传入 Vn+1；新建、资源检查和规则生成待 B/C 领域实现后小变更扩展。
+- `updatePendingTask(_:)`：C 的草稿调整入口；禁止修改已确认／历史任务，检查人群及方案旧版本引用；不实现确认／执行。
+- `reset()` 恢复整份 seed、版本、字段、建议和所有模块的存储；`resetGeneration` 令根重建导航、筛选和表单。入口位于四模块首页右上角演示工具，先确认。
+
+固定业务参考日为 `DemoClock.referenceDate`（上海 2026/10/11 12:00）；保存及采纳记录用实际操作时间，两者分开。画像元信息只用于解释固定样本，不声称算法已实现。
+
+为兼容 C 当前只读页面，根传 `approvalStore`，其人群画像来自任务所引用版本；根显示最新版变化提醒。此适配针对现有单一人群版本任务样本。C 完成多任务版本选择后，应逐任务使用 `audienceVersion`／`planVersion`，不能用一个扁平 store 表达同对象多个版本。新建人群已在 `session.audiences`／`session.store` 可查；C 选择器尚未开发，故 UI 联合验收仍待 C 接线。
+
+B 的资源／规则、C 的冻结执行批次／操作重试、D 的趋势／联合去重结果仍按各自任务提出最小类型后整合；本次不替领域负责人设计未使用的模型或业务页面。共享基础独立提交在 feature/audience，交团队 review 后优先合入，不自动合并 main 或通知其他聊天。
+
+## PR #3/#4 整合后接口
+
+唯一 DemoSession 为 MainActor Observable。tasks 与 approvalTasks 为同一集合，C 使用 approvalAudience／audienceRevision／planRevision，A 保留 audience 的 AudienceSnapshot 签名。B PlanSessionAccess 写入和 C 规则待审批入口已接通；D analyticsIntegration 由根从会话观察值构造，加载闭包调用 loadAnalyticsStatistics。重置恢复所有模块，历史批次不重复计入新统计。完整说明及可复现检查见 DeveloperTasks/PR_INTEGRATION_20261011.md。

@@ -1,5 +1,7 @@
 # 数据模型与约定
 
+> B 分支增补（2026/10/11）：方案领域类型、校验和只读样本已写入独立新文件；共享会话与任务生成已在 PR #4 整合。下文为原骨架模型基线，新增字段、所有权和迁移说明见 [B 对接说明](DeveloperTasks/B_PLAN_INTEGRATION.md)。新增 PlanVersionSnapshot 是方案内容快照，不另建通用 VersionRecord；PlanMetadata 暂按 plan ID 保存资源引用及时间，不改变既有 MarketingPlan 初始化参数。
+
 模型位于 `TouchMarketingDemo/Shared/Models`，统一 fixture 位于 `Shared/MockData/MockDataStore.swift`。类型为轻量值对象，不对应网络响应或数据库表。稳定字符串 ID 用于关联，编号单独存储，不能由数组下标生成。
 
 ## 已写入 Swift 的对象
@@ -62,7 +64,7 @@
 
 ## 审批扩展（开发者 C 已写入 Swift）
 
-共享会话是 `DemoSession`，由 App 根创建一次。审批页读写这份会话；人群、方案、数据页仍读取原来的只读 `MockDataStore`，直到整合者把它们接进来。`MockDataStore.demo` 仍是重置时的种子。
+共享会话是 `DemoSession`，由 App 根创建一次。四模块读写同一会话；B 的 PlanSessionAccess 与 D 的 AnalyticsIntegration 在根接入，C 的 tasks 是 A 的 approvalTasks 别名。`MockDataStore.demo` 仍是重置时的种子。
 
 | 类型 | 说明 |
 | --- | --- |
@@ -73,14 +75,38 @@
 | `ApprovalRecord` | 稳定 ID、序号、任务、操作类型、实际时间、前后摘要、说明、演示运营人员 |
 | `RulePendingTaskRequest` | B 传入规则 ID、周期键、来源、人群版本、预计人数和分配。同一规则＋周期不重复 |
 | `DeliveryTouchSummary` | 给 D 的只读触达投影：批次、任务、业务日、版本、分配和成功人数、统计状态。不含成交 |
-| `StatisticsReadiness` | 新批次为 `collecting`（统计中）。只有历史 `batch-history-01` 是 `historicalSample` |
+| `StatisticsReadiness` | 新批次为 `collecting`（统计中）；匹配统计加载后为 `simulated`。只有历史 `batch-history-01` 是 `historicalSample` |
+
 
 人数规则仍用 `ABAllocation.expectedCounts`。部分失败的演示样本把失败人数定为分配人数的 1/4，因此 600／1,400 得到失败 150／350。重试全部成功后唯一成功触达仍是原分配人数。业务日固定为上海时区 2026/10/11；操作记录另记实际时间。
 
 审批选择器里还有三个人群演示样本，只放在会话中，不改人群页的两张卡片：`audience-03` 零覆盖，`audience-04` 依据不足但本次 400 人，`audience-05` 小样本 50 人。`audience-01` 本次范围是 2,000，不是覆盖数 8,420；`audience-02` 本次范围是 900。
 
-## 仍未写入 Swift 的通用约定
 
-`VersionRecord` 仍未作为通用类型加入。审批用 `DeliverySnapshot` 和会话里的版本档案保存发送当时的人群／方案内容，不替代 A／B 的通用历史版本模型。
+后续规则：发送快照需冻结人群／方案版本和分配；数据需补 `audienceVersion`、批次及归因范围；统计中的未知值须显式表示，不作为 0。多个方案版本合并统计时，应调整 PlanPerformance 的唯一 ID 与分组约定。扩展共享模型必须同时更新本文件、fixture 和相关页面。
 
-尚未实现观察周期、规则条件、自定义字段、量表版本、店铺资源本体、触达规则配置、客户级失败名单、真实去重和趋势点。成交未知保持“统计中”，不写成 0。多个方案版本合并统计时，仍应调整 `PlanPerformance` 的唯一 ID 与分组约定。
+## A 阶段已实现的增补（覆盖上文“尚未实现”的人群相关项）
+
+| 类型 | 实际职责 |
+| --- | --- |
+| `DemoSession` | 单一 Observable 会话、受校验的保存／版本查询／建议处理／统一重置 |
+| `AudienceField` | 稳定ID、名称、分类/数值/日期/布尔、说明、属性、识别依据、启用、版本、内置标记 |
+| `AudienceRuleCondition` | 稳定条件ID、冻结的字段定义、类型适配操作符、类型化值 |
+| `AudienceRules` | 一层 AND/OR、条件数组、识别说明；重复字段拒绝，范围用 between |
+| `AudienceSnapshot` | 原 Audience、规则、识别状态、观察期/量表/品类口径/更新时间 |
+| `VersionRecord` / `VersionContent` | 共用对象种类/ID/版本/时间/来源/变化摘要，内容分别为人群快照或方案值对象 |
+| `DemoSuggestion` | 目标种类/ID/基础版本、变化、依据、影响、可选建议规则、状态/生成版本/处理时间 |
+| `DemoClock` | 上海固定演示日；操作留痕用实际时间 |
+
+原 Audience/MarketingPlan/ApprovalTask 的结构及稳定 ID 不改。人群不保存反向方案关系。`AudienceFixtures.swift` 与原 MockDataStore 同在 Shared，包含统一字段、初始规则、建议和联合覆盖样本；Feature 没有业务 fixture。
+
+新增样本：两人群覆盖 8,420／3,160，重叠580，联合11,000。仅完整匹配初始两对象内容时使用联合值；新建／规则修改后的多个范围无预去重摘要则“待统计”，不按人数相加。单个人群在识别完成／0覆盖状态可显示已知覆盖；依据不足和识别中覆盖未知。初始规则为距上次购买不大于90／30天，均新增本地演示约定，非真实后台条件。
+
+保存新规则：新版本识别中，画像 nil、覆盖未知；选择完成场景固定借用人群01的8,420及五维/品类，说明与输入规则无计算关系；依据不足场景全部nil且覆盖未知；空范围场景覆盖0且无画像。识别完成只补充当前同版本结果并记录画像更新时间，不增加版本；完成后锁定，后续版本不影响旧快照。
+
+初始人群/方案 V1 均有类型化记录。旧字段定义随规则冻结；字典修改、停用不回写。人群建议含可采纳 V1 和过期 V0 两条，采纳只保存规则进入识别，不能自动改审批任务版本或历史数据。资源、触达规则、执行批次、趋势及统计状态仍待 B/C/D 开发，本次未将未知成交伪装成0。
+
+
+## 四模块合并接线（2026/10/11）
+
+A/C 同名会话已合并，保留人群规则、字段及类型化 VersionRecord；审批按版本读取，不另建版本库。C 确认与执行状态保留原批次，累计唯一成功人数接入 AnalyticsBatchStatistics，历史批次单独保留且不重复加入新统计。B 保存与建议生成方案版本和资源快照，规则生成调用 C 同周期去重入口。重置一次恢复四模块、批次、规则生成记录、模拟统计及根导航。审批选择器的边界人群来自只读样本目录，未增加 A 的初始两个人群；移除旧快照演示只阻止审批读取，不删除 A 历史。

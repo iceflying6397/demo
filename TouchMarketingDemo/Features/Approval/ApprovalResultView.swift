@@ -109,8 +109,11 @@ struct ApprovalResultView: View {
             if batch.statisticsStatus == .historicalSample {
                 Text("这条是历史样本，成交已在数据页载入模拟统计。请打开「数据」Tab 查看 2026/10/05—2026/10/11，不要把 168 人成交抄到新批次。")
                     .font(DemoTheme.Typography.body)
+            } else if batch.statisticsStatus == .simulated {
+                Text("本批次已载入匹配配置的模拟统计。请切换到「数据」Tab 查看此批次；数值为本地演示结果。")
+                    .font(DemoTheme.Typography.body)
             } else {
-                Text("本批次触达可以按批次 \(batch.id) 关联。成交还是统计中；没有匹配样本时不显示未知成交，也不写成 0。请到「数据」Tab 查看历史样本，本页不打开数据首页。")
+                Text("本批次触达可以按批次 \(batch.id) 关联。成交还是统计中；没有匹配样本时不显示未知成交，也不写成 0。请到「数据」Tab 选择此批次查看。")
                     .font(DemoTheme.Typography.body)
             }
         }

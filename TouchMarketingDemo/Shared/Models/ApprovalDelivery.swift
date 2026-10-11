@@ -59,7 +59,8 @@ enum RetryPreset: String, Hashable, CaseIterable {
 enum StatisticsReadiness: String, Hashable {
     /// 新批次的成交未知，不能写成 0，也不能抄历史成交。
     case collecting = "统计中"
-    case historicalSample = "已载入模拟统计"
+    case historicalSample = "历史模拟统计"
+    case simulated = "已载入模拟统计"
 }
 
 struct DeliveryBatch: Identifiable, Hashable {
@@ -255,7 +256,6 @@ enum ApprovalExecutionMath {
         if partA.succeeded + partA.failed + partB.succeeded + partB.failed != 2_000 {
             errors.append("部分失败合计应仍为 2000")
         }
-        if 600 + 1_400 != 2_000 { errors.append("全部补发成功应为 2000 而不是 3500") }
         let small = ABAllocation(groups: [
             .init(planID: "plan-01", planVersion: 1, percentage: 1),
             .init(planID: "plan-02", planVersion: 1, percentage: 99)

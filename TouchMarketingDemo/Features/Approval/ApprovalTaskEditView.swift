@@ -37,7 +37,8 @@ struct ApprovalTaskEditView: View {
                     }
                     ApprovalAllocationEditor(
                         draft: draftBinding,
-                        reach: session.knownReach(
+                        reach: session.adjustmentReach(
+                            taskID: taskID,
                             audienceID: draftBinding.wrappedValue.audienceID,
                             version: draftBinding.wrappedValue.audienceVersion
                         ),
@@ -82,7 +83,7 @@ struct ApprovalTaskEditView: View {
 
     private func save(_ task: ApprovalTask) {
         guard let draft else { return }
-        let reach = session.knownReach(audienceID: draft.audienceID, version: draft.audienceVersion)
+        let reach = session.adjustmentReach(taskID: taskID, audienceID: draft.audienceID, version: draft.audienceVersion)
         if let error = draft.validationMessage(reach: reach) {
             message = error
             return

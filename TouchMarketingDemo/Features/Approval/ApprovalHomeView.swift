@@ -206,7 +206,7 @@ struct ApprovalTaskCard: View {
         }
         ApprovalAllocationEditor(
             draft: $draft,
-            reach: session.knownReach(audienceID: draft.audienceID, version: draft.audienceVersion),
+            reach: session.adjustmentReach(taskID: taskID, audienceID: draft.audienceID, version: draft.audienceVersion),
             recommendation: recommendation(task),
             planName: planName,
             onRestore: { restore(task) },
@@ -267,7 +267,7 @@ struct ApprovalTaskCard: View {
     }
 
     private func save(_ task: ApprovalTask) {
-        let reach = session.knownReach(audienceID: draft.audienceID, version: draft.audienceVersion)
+        let reach = session.adjustmentReach(taskID: taskID, audienceID: draft.audienceID, version: draft.audienceVersion)
         if let error = draft.validationMessage(reach: reach) {
             message = error
             return

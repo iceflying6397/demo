@@ -60,3 +60,9 @@ Xcode 16+ `PBXFileSystemSynchronizedRootGroup` 同步 `TouchMarketingDemo` 目�
 ## 开发准备状态
 
 四人下一阶段实施计划见 DeveloperTasks；其中DemoSession、扩展资源/规则/版本/建议/批次/统计类型尚未写入Swift。当前实现仍是上文的只读store。未来接线由A先集中完成最小基础，再由四模块分别补业务；本文的“实际目录”不预先列入计划文件。
+
+## A 人群阶段状态架构（2026/10/11，替代只读流程）
+
+AppRootView 的唯一 `@State DemoSession` 从 `MockDataStore.demo` seed 初始化；环境注入四模块，读取时投影 store。A 首页 `init(store:session:)` 接同一个引用，只有独立 `init(store:)` Preview 才创建本地会话。草稿与筛选仍用 Feature 内 State；保存经 session 校验后替换不可变值。
+
+Shared 新增 AudienceManagement、AudienceFixtures、State/DemoSession；A目录新增表单、字段、历史、建议和画像组件。版本内容为人群／方案类型化 enum，不存任意 JSON。根统一 resetGeneration 重建各导航栈，恢复全 seed。App 无持久化、计时器、网络或第三方依赖；B/C/D具体 View 未修改。

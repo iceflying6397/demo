@@ -22,7 +22,7 @@ struct DemoIntro: View {
     var body: some View {
         VStack(alignment: .leading, spacing: DemoTheme.Spacing.small) {
             Text(description).font(DemoTheme.Typography.body)
-            Text("本地示例 · 演示骨架")
+            Text("本地示例 · 无真实 AI 或发送")
                 .font(DemoTheme.Typography.caption)
                 .foregroundStyle(DemoTheme.ColorToken.secondaryText)
         }

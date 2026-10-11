@@ -13,7 +13,7 @@ struct ApprovalAudiencePickerView: View {
             if session.audienceRevision(id: draft.audienceID, version: draft.audienceVersion) == nil {
                 DemoEmptyState(title: "当前引用不可用", message: "列表里没有这条引用。不会自动改选其他人群。")
             }
-            ForEach(session.audiences.sorted { $0.number < $1.number }) { audience in
+            ForEach(session.approvalAudiences.sorted { $0.number < $1.number }) { audience in
                 audienceCard(audience)
             }
             if let message {

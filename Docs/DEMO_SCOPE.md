@@ -1,5 +1,7 @@
 # Demo 范围与验收
 
+> A 阶段人群交互、共享会话与重置现已实现，下面原始骨架范围/旧机器验证记录保留为基线；最新实际范围及未完成运行验收详见 [A交付记录](DeveloperTasks/A_AUDIENCE_DELIVERY.md)。不可将旧机器 iPhone17 点击记录当作本次新增功能已验证。
+
 ## 已包含
 
 - 原生 SwiftUI App、共享 Xcode Scheme、iOS 17+ iPhone 竖屏配置。

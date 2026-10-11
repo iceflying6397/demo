@@ -38,7 +38,7 @@ struct ApprovalDemoControls: View {
     }
 
     private func birthdayTask() -> ApprovalActionResult {
-        guard let audience = session.audience(id: "audience-01"),
+        guard let audience = session.approvalAudience(id: "audience-01"),
               let planA = session.plan(id: "plan-01"),
               let planB = session.plan(id: "plan-02"),
               let reach = session.knownReach(audienceID: audience.id, version: audience.version),

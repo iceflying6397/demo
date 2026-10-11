@@ -14,6 +14,13 @@ enum DemoFormat {
     static func percent(_ value: Double?) -> String {
         value.map { $0.formatted(.percent.locale(locale).precision(.fractionLength(2))) } ?? "—"
     }
+    static func timestamp(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.timeZone = TimeZone(identifier: "Asia/Shanghai")
+        formatter.dateFormat = "yyyy/MM/dd HH:mm"
+        return formatter.string(from: date)
+    }
     static func dateRange(start: Date, end: Date) -> String {
         "\(day(start))—\(day(end))"
     }
