@@ -1,5 +1,7 @@
 # 数据模型与约定
 
+> B 分支增补（2026/10/11）：方案领域类型、校验和只读样本已写入独立新文件；共享会话与任务生成仍待 A/C 整合。下文为原骨架模型基线，新增字段、所有权和迁移说明见 [B 对接说明](DeveloperTasks/B_PLAN_INTEGRATION.md)。新增 PlanVersionSnapshot 是方案内容快照，不另建通用 VersionRecord；PlanMetadata 暂按 plan ID 保存资源引用及时间，不改变既有 MarketingPlan 初始化参数。
+
 模型位于 `TouchMarketingDemo/Shared/Models`，统一 fixture 位于 `Shared/MockData/MockDataStore.swift`。类型为轻量值对象，不对应网络响应或数据库表。稳定字符串 ID 用于关联，编号单独存储，不能由数组下标生成。
 
 ## 已写入 Swift 的对象
